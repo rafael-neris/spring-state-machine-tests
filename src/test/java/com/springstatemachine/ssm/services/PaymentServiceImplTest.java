@@ -10,11 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
-
-import static java.lang.Thread.sleep;
-import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
 @SpringBootTest
@@ -36,11 +32,12 @@ class PaymentServiceImplTest {
     public void testShouldRefund() {
         Payment savedPayment = paymentService.newPayment(payment);
         paymentService.preAuth(savedPayment.getId());
+        paymentService.approvePreAuth(savedPayment.getId());
         paymentService.declineAuth(savedPayment.getId());
         paymentService.refund(savedPayment.getId());
         paymentService.reserveRefund(savedPayment.getId());
         paymentService.confirmRefund(savedPayment.getId());
-        paymentService.completeRefund(savedPayment.getId());
+        StateMachine<PaymentState, PaymentEvent> sm = paymentService.completeRefund(savedPayment.getId());
 
         Payment preAuthedPayment = paymentRepository.getById(savedPayment.getId());
 
