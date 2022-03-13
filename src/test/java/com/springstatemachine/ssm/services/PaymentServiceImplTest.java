@@ -70,6 +70,31 @@ class PaymentServiceImplTest {
 
     @Transactional
     @Test
+    public void testShouldNotCompleteTransactionWithAuthorizeError() {
+        Payment savedPayment = paymentService.newPayment(payment);
+        paymentService.approvePreAuth(savedPayment.getId());
+        paymentService.declineAuth(savedPayment.getId());
+
+        Payment preAuthedPayment = paymentRepository.getById(savedPayment.getId());
+
+        assertSame(PaymentState.AUTHORIZE_ERROR, preAuthedPayment.getPaymentState());
+    }
+
+    @Transactional
+    @Test
+    public void testShouldNotRefundTransactionWithPreAuthorizeError() {
+        Payment savedPayment = paymentService.newPayment(payment);
+        paymentService.declinePreAuth(savedPayment.getId());
+        paymentService.refund(savedPayment.getId());
+
+        Payment preAuthedPayment = paymentRepository.getById(savedPayment.getId());
+
+        assertSame(PaymentState.PRE_AUTH_ERROR, preAuthedPayment.getPaymentState());
+    }
+
+
+    @Transactional
+    @Test
     public void testDeclinePreAuth() {
         Payment savedPayment = paymentService.newPayment(payment);
         StateMachine<PaymentState, PaymentEvent> sm = paymentService.declinePreAuth(savedPayment.getId());
