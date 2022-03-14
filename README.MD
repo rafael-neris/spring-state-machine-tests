@@ -88,5 +88,6 @@ Ações são comportamentos executados durante a trigger de uma transition.
 
 ### Referências
 https://docs.spring.io/spring-statemachine/docs/current/reference/index.html#state-machine-concepts
+https://www.youtube.com/watch?v=A-dVgRV5-Bw
 
 
