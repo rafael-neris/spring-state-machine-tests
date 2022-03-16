@@ -1,6 +1,6 @@
 @startuml
 state join_state <<join>>
-state fork_state <<fork>>
+state REFUND_FLOW <<fork>>
 [*] --> NEW : PRE_AUTHORIZE
 NEW --> PRE_AUTH : PRE_AUTH_APPROVED
 NEW --> PRE_AUTH_ERROR : PRE_AUTH_DECLINED
@@ -8,10 +8,9 @@ PRE_AUTH_ERROR --> [*]
 PRE_AUTH --> AUTHORIZED : AUTHORIZED
 AUTHORIZED --> [*]
 PRE_AUTH --> AUTHORIZE_ERROR : AUTH_DECLINED
-AUTHORIZE_ERROR --> [*]
-AUTHORIZE_ERROR --> fork_state : REFUND_FLOW
-fork_state --> Refund : REFUND
-fork_state --> Notify : NOTIFY
+AUTHORIZE_ERROR --> REFUND_FLOW : REFUND_FLOW
+REFUND_FLOW --> Refund : REFUND
+REFUND_FLOW --> Notify : NOTIFY
 Refund --> join_state : REFUNDED
 Notify --> join_state : NOTIFIED
 

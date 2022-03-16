@@ -80,6 +80,34 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Transactional
     @Override
+    public StateMachine<PaymentState, PaymentEvent> notify(Long paymentId) {
+        StateMachine<PaymentState, PaymentEvent> sm = build(paymentId);
+        sendEvent(paymentId, sm, PaymentEvent.START_NOTIFY);
+
+        return sm;
+    }
+
+    @Transactional
+    @Override
+    public StateMachine<PaymentState, PaymentEvent> confirmNotify(Long paymentId) {
+        StateMachine<PaymentState, PaymentEvent> sm = build(paymentId);
+        sendEvent(paymentId, sm, PaymentEvent.CONFIRM_NOTIFY);
+
+        return sm;
+    }
+
+
+    @Transactional
+    @Override
+    public StateMachine<PaymentState, PaymentEvent> initRefundFlow(Long paymentId) {
+        StateMachine<PaymentState, PaymentEvent> sm = build(paymentId);
+        sendEvent(paymentId, sm, PaymentEvent.REFUND_FLOW);
+
+        return sm;
+    }
+
+    @Transactional
+    @Override
     public StateMachine<PaymentState, PaymentEvent> reserveRefund(Long paymentId) {
         StateMachine<PaymentState, PaymentEvent> sm = build(paymentId);
         sendEvent(paymentId, sm, PaymentEvent.RESERVE);

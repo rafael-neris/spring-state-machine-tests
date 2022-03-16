@@ -24,11 +24,25 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<PaymentSta
 
     public void configure(StateMachineStateConfigurer<PaymentState, PaymentEvent> states) throws Exception {
         configureNewPaymentStates(states);
+        states.withStates()
+                .fork(PaymentState.REFUND_FLOW)
+                .and();
         configureRefund(states);
+        configureNotify(states);
     }
 
-    private StateMachineStateConfigurer<PaymentState, PaymentEvent> configureNewPaymentStates(StateMachineStateConfigurer<PaymentState, PaymentEvent> states) throws Exception {
-        return states
+    private void configureNotify(StateMachineStateConfigurer<PaymentState, PaymentEvent> states) throws Exception {
+        states
+                .withStates()
+                .region("NOTIFY")
+                .parent(PaymentState.REFUND_FLOW)
+                .initial(PaymentState.NOTIFY)
+                .state(PaymentState.WAITING_NOTIFY)
+                .end(PaymentState.NOTIFIED)
+                .and();
+    }
+    private void configureNewPaymentStates(StateMachineStateConfigurer<PaymentState, PaymentEvent> states) throws Exception {
+        states
             .withStates()
             .initial(PaymentState.NEW)
             .and()
@@ -39,27 +53,29 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<PaymentSta
             .state(PaymentState.AUTHORIZED)
             .state(PaymentState.PRE_AUTH_ERROR)
             .state(PaymentState.AUTHORIZE_ERROR)
+            .fork(PaymentState.REFUND_FLOW)
             .end(PaymentState.AUTHORIZE_ERROR)
             .end(PaymentState.PRE_AUTH_ERROR)
             .end(PaymentState.AUTHORIZED)
             .and();
     }
 
-    private StateMachineStateConfigurer<PaymentState, PaymentEvent> configureRefund(StateMachineStateConfigurer<PaymentState, PaymentEvent> states) throws Exception {
-        return states
-                .withStates()
-                .parent(PaymentState.AUTHORIZE_ERROR)
-                .region("REFUND")
-                .initial(PaymentState.REFUND)
-                .state(PaymentState.RESERVED)
-                .state(PaymentState.CONFIRMED)
-                .end(PaymentState.REFUND_COMPLETED).and();
+    private void configureRefund(StateMachineStateConfigurer<PaymentState, PaymentEvent> states) throws Exception {
+        states
+            .withStates()
+            .region("REFUND")
+            .parent(PaymentState.REFUND_FLOW)
+            .initial(PaymentState.REFUND)
+            .state(PaymentState.RESERVED)
+            .state(PaymentState.CONFIRMED)
+            .end(PaymentState.REFUND_COMPLETED).and();
     }
 
 
     @Override
     public void configure(StateMachineTransitionConfigurer<PaymentState, PaymentEvent> transitions) throws Exception {
-        transitions.withExternal().source(PaymentState.NEW).target(PaymentState.NEW).event(PaymentEvent.PRE_AUTHORIZE)
+        transitions
+                .withExternal().source(PaymentState.NEW).target(PaymentState.NEW).event(PaymentEvent.PRE_AUTHORIZE)
                 .and()
                 .withExternal().source(PaymentState.NEW).target(PaymentState.PRE_AUTH).event(PaymentEvent.PRE_AUTH_APPROVED)
                 .and()
@@ -69,13 +85,29 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<PaymentSta
                 .and()
                 .withExternal().source(PaymentState.PRE_AUTH).target(PaymentState.AUTHORIZE_ERROR).event(PaymentEvent.AUTH_DECLINED)
                 .and()
-                .withExternal().source(PaymentState.AUTHORIZE_ERROR).target(PaymentState.REFUND).event(PaymentEvent.REFUND)
-                .and()
                 .withExternal().source(PaymentState.REFUND).target(PaymentState.RESERVED).event(PaymentEvent.RESERVE)
                 .and()
                 .withExternal().source(PaymentState.RESERVED).target(PaymentState.CONFIRMED).event(PaymentEvent.CONFIRM)
                 .and()
-                .withExternal().source(PaymentState.CONFIRMED).target(PaymentState.REFUND_COMPLETED).event(PaymentEvent.REFUND_COMPLETED);
+                .withExternal().source(PaymentState.CONFIRMED).target(PaymentState.REFUND_COMPLETED).event(PaymentEvent.REFUND_COMPLETED)
+                .and()
+                .withFork()
+                    .source(PaymentState.REFUND_FLOW)
+                    .target(PaymentState.REFUND)
+                    .target(PaymentState.NOTIFY)
+                .and()
+                .withExternal().source(PaymentState.AUTHORIZE_ERROR).target(PaymentState.REFUND_FLOW).event(PaymentEvent.REFUND_FLOW)
+                .and()
+                .withExternal()
+                    .source(PaymentState.NOTIFY)
+                    .target(PaymentState.WAITING_NOTIFY)
+                    .event(PaymentEvent.START_NOTIFY)
+                .and()
+                .withExternal()
+                    .source(PaymentState.WAITING_NOTIFY)
+                    .target(PaymentState.NOTIFIED)
+                    .event(PaymentEvent.CONFIRM_NOTIFY);
+
     }
 
     @Override

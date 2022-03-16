@@ -19,6 +19,16 @@ public interface PaymentService {
     StateMachine<PaymentState, PaymentEvent> declineAuth(Long paymentId);
     @Transactional
     StateMachine<PaymentState, PaymentEvent> refund(Long paymentId);
+
+    @Transactional
+    StateMachine<PaymentState, PaymentEvent> notify(Long paymentId);
+
+    @Transactional
+    StateMachine<PaymentState, PaymentEvent> confirmNotify(Long paymentId);
+
+    @Transactional
+    StateMachine<PaymentState, PaymentEvent> initRefundFlow(Long paymentId);
+
     @Transactional
     StateMachine<PaymentState, PaymentEvent> reserveRefund(Long paymentId);
     @Transactional
