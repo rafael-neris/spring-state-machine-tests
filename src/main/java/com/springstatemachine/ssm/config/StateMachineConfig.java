@@ -21,29 +21,23 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<PaymentSta
         states
             .withStates()
                 .initial(PaymentState.NEW)
-                .end(PaymentState.AUTHORIZED)
                 .state(PaymentState.AUTHORIZE_ERROR)
+                .end(PaymentState.AUTHORIZED)
+                .fork(PaymentState.REFUND_FLOW)
+                .join(PaymentState.REFUND_COMPLETED)
                 .state(PaymentState.NOTIFY)
                 .state(PaymentState.REFUND)
+                .end(PaymentState.REFUNDED)
                 .and()
                 .withStates()
-                    .parent(PaymentState.REFUND)
+                    .parent(PaymentState.AUTHORIZE_ERROR)
                     .initial(PaymentState.RESERVED)
-                    .state(PaymentState.RESERVED)
-                    .state(PaymentState.CONFIRMED)
                     .end(PaymentState.CONFIRMED)
                 .and()
                 .withStates()
-                    .parent(PaymentState.NOTIFY)
+                    .parent(PaymentState.AUTHORIZE_ERROR)
                     .initial(PaymentState.WAITING_NOTIFY)
-                    .state(PaymentState.WAITING_NOTIFY)
-                    .state(PaymentState.NOTIFIED)
-                    .end(PaymentState.NOTIFIED)
-                .fork(PaymentState.REFUND_FLOW)
-                .join(PaymentState.REFUND_COMPLETED)
-                .end(PaymentState.AUTHORIZED)
-                .end(PaymentState.REFUND_COMPLETED);
-
+                    .end(PaymentState.NOTIFIED);
     }
 
     @Override
@@ -71,17 +65,18 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<PaymentSta
                 .and()
                 .withExternal()
                     .source(PaymentState.NOTIFY).target(PaymentState.WAITING_NOTIFY).event(PaymentEvent.START_NOTIFY)
-                    .and()
+                .and()
                 .withExternal()
-                    .source(PaymentState.NOTIFY).target(PaymentState.NOTIFIED).event(PaymentEvent.CONFIRM_NOTIFY)
+                    .source(PaymentState.WAITING_NOTIFY).target(PaymentState.NOTIFIED).event(PaymentEvent.CONFIRM_NOTIFY)
                 .and()
                 .withJoin()
                     .source(PaymentState.CONFIRMED)
                     .source(PaymentState.NOTIFIED)
                     .target(PaymentState.REFUND_COMPLETED)
-                .and()
+                    .and()
                 .withExternal()
-                    .source(PaymentState.REFUND_COMPLETED).target(PaymentState.REFUNDED).event(PaymentEvent.REFUND_COMPLETED);
+                    .source(PaymentState.REFUND_COMPLETED)
+                    .target(PaymentState.REFUNDED);
     }
 
     @Override

@@ -129,6 +129,6 @@ public class PaymentServiceImpl implements PaymentService {
         Message<PaymentEvent> msg = MessageBuilder.withPayload(event)
                 .setHeader(PAYMENT_ID_HEADER, paymentId)
                 .build();
-        sm.sendEvent(msg);
+        System.out.println(sm.sendEvent(msg));
     }
 }
