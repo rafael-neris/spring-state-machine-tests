@@ -21,6 +21,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final StateMachineFactory<PaymentState, PaymentEvent> stateMachineFactory;
     private final PaymentStateChangeInterceptor paymentStateChangeListener;
 
+    @Transactional
     @Override
     public Payment newPayment(Payment payment) {
         payment.setPaymentState(PaymentState.NEW);
@@ -29,34 +30,9 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Transactional
     @Override
-    public StateMachine<PaymentState, PaymentEvent> preAuth(Long paymentId) {
-        StateMachine<PaymentState, PaymentEvent> sm = build(paymentId);
-        sendEvent(paymentId, sm, PaymentEvent.PRE_AUTHORIZE);
-        return sm;
-    }
-
-    @Transactional
-    @Override
-    public StateMachine<PaymentState, PaymentEvent> approvePreAuth(Long paymentId) {
-        StateMachine<PaymentState, PaymentEvent> sm = build(paymentId);
-        sendEvent(paymentId, sm, PaymentEvent.PRE_AUTH_APPROVED);
-        return sm;
-    }
-
-    @Transactional
-    @Override
     public StateMachine<PaymentState, PaymentEvent> authorizePayment(Long paymentId) {
         StateMachine<PaymentState, PaymentEvent> sm = build(paymentId);
-        sendEvent(paymentId, sm, PaymentEvent.AUTHORIZED);
-        return sm;
-    }
-
-    @Transactional
-    @Override
-    public StateMachine<PaymentState, PaymentEvent> declinePreAuth(Long paymentId) {
-        StateMachine<PaymentState, PaymentEvent> sm = build(paymentId);
-        sendEvent(paymentId, sm, PaymentEvent.PRE_AUTH_DECLINED);
-
+        sendEvent(paymentId, sm, PaymentEvent.AUTHORIZE);
         return sm;
     }
 
@@ -134,6 +110,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
 
+    @Transactional
     private StateMachine<PaymentState, PaymentEvent> build(Long paymentId) {
         Payment payment = paymentRepository.getById(paymentId);
         StateMachine<PaymentState, PaymentEvent> sm = stateMachineFactory.getStateMachine(Long.toString(payment.getId()));
@@ -147,7 +124,7 @@ public class PaymentServiceImpl implements PaymentService {
         return sm;
     }
 
-
+    @Transactional
     private void sendEvent(Long paymentId, StateMachine<PaymentState, PaymentEvent> sm, PaymentEvent event) {
         Message<PaymentEvent> msg = MessageBuilder.withPayload(event)
                 .setHeader(PAYMENT_ID_HEADER, paymentId)

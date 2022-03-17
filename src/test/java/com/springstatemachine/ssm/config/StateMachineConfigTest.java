@@ -21,10 +21,8 @@ class StateMachineConfigTest {
     void testNewStateMachine() {
         StateMachine<PaymentState, PaymentEvent> sm = factory.getStateMachine(UUID.randomUUID());
         sm.start();
-        System.out.println(sm.getState().toString());
-        sm.sendEvent(PaymentEvent.PRE_AUTHORIZE);
-        System.out.println(sm.getState().toString());
-        sm.sendEvent(PaymentEvent.PRE_AUTH_DECLINED);
-        System.out.println(sm.getState().toString());
+        sm.sendEvent(PaymentEvent.AUTH_DECLINED);
+        assertSame(PaymentState.AUTHORIZE_ERROR, sm.getState().getId());
+        sm.stop();
     }
 }

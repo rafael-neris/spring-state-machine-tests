@@ -29,128 +29,26 @@ class PaymentServiceImplTest {
 
     @Transactional
     @Test
-    public void testShouldRefund() {
-        Payment savedPayment = paymentService.newPayment(payment);
-        paymentService.preAuth(savedPayment.getId());
-        paymentService.approvePreAuth(savedPayment.getId());
-        assertSame(PaymentState.PRE_AUTH, savedPayment.getPaymentState());
-
-        paymentService.declineAuth(savedPayment.getId());
-        paymentService.initRefundFlow(savedPayment.getId());
-        paymentService.refund(savedPayment.getId());
-        paymentService.notify(savedPayment.getId());
-        paymentService.reserveRefund(savedPayment.getId());
-        paymentService.confirmRefund(savedPayment.getId());
-        paymentService.completeRefund(savedPayment.getId());
-        paymentService.confirmNotify(savedPayment.getId());
-
-
-        Payment payment = paymentRepository.getById(savedPayment.getId());
-
-        assertSame(PaymentState.REFUND_COMPLETED, payment.getPaymentState());
-    }
-
-    @Transactional
-    @Test
     public void testShouldRefundWithNotifyAndRefundDifferentOrder() {
         Payment savedPayment = paymentService.newPayment(payment);
-        paymentService.preAuth(savedPayment.getId());
-        paymentService.approvePreAuth(savedPayment.getId());
-        assertSame(PaymentState.PRE_AUTH, savedPayment.getPaymentState());
-
         paymentService.declineAuth(savedPayment.getId());
-        paymentService.initRefundFlow(savedPayment.getId());
+        assertSame(PaymentState.AUTHORIZE_ERROR, savedPayment.getPaymentState());
         paymentService.refund(savedPayment.getId());
+        assertSame(PaymentState.REFUND, savedPayment.getPaymentState());
         paymentService.notify(savedPayment.getId());
+        assertSame(PaymentState.WAITING_NOTIFY, savedPayment.getPaymentState());
+
         paymentService.reserveRefund(savedPayment.getId());
+        assertSame(PaymentState.RESERVED, savedPayment.getPaymentState());
+
         paymentService.confirmRefund(savedPayment.getId());
+        assertSame(PaymentState.CONFIRMED, savedPayment.getPaymentState());
+
         paymentService.confirmNotify(savedPayment.getId());
+        assertSame(PaymentState.NOTIFIED, savedPayment.getPaymentState());
+
+
         paymentService.completeRefund(savedPayment.getId());
-
-        Payment payment = paymentRepository.getById(savedPayment.getId());
-
-        assertSame(PaymentState.REFUND_COMPLETED, payment.getPaymentState());
-    }
-
-    @Transactional
-    @Test
-    public void testShouldRefundWithInvalidState() {
-        Payment savedPayment = paymentService.newPayment(payment);
-        paymentService.preAuth(savedPayment.getId());
-        paymentService.approvePreAuth(savedPayment.getId());
-        assertSame(PaymentState.PRE_AUTH, savedPayment.getPaymentState());
-
-        paymentService.declineAuth(savedPayment.getId());
-        paymentService.initRefundFlow(savedPayment.getId());
-        paymentService.refund(savedPayment.getId());
-        paymentService.notify(savedPayment.getId());
-        paymentService.reserveRefund(savedPayment.getId());
-        paymentService.confirmRefund(savedPayment.getId());
-        paymentService.confirmNotify(savedPayment.getId());
-        paymentService.completeRefund(savedPayment.getId());
-
-        Payment payment = paymentRepository.getById(savedPayment.getId());
-
-        assertSame(PaymentState.REFUND_COMPLETED, payment.getPaymentState());
-    }
-
-    @Transactional
-    @Test
-    public void testShouldCompleteTransaction() {
-        Payment savedPayment = paymentService.newPayment(payment);
-        paymentService.preAuth(savedPayment.getId());
-        paymentService.authorizePayment(savedPayment.getId());
-
-        Payment preAuthedPayment = paymentRepository.getById(savedPayment.getId());
-
-        assertSame(PaymentState.AUTHORIZED, preAuthedPayment.getPaymentState());
-    }
-
-    @Transactional
-    @Test
-    public void testShouldNotCompleteTransaction() {
-        Payment savedPayment = paymentService.newPayment(payment);
-        paymentService.declinePreAuth(savedPayment.getId());
-        paymentService.authorizePayment(savedPayment.getId());
-
-        Payment preAuthedPayment = paymentRepository.getById(savedPayment.getId());
-
-        assertSame(PaymentState.PRE_AUTH_ERROR, preAuthedPayment.getPaymentState());
-    }
-
-    @Transactional
-    @Test
-    public void testShouldNotCompleteTransactionWithAuthorizeError() {
-        Payment savedPayment = paymentService.newPayment(payment);
-        paymentService.approvePreAuth(savedPayment.getId());
-        paymentService.declineAuth(savedPayment.getId());
-
-        Payment preAuthedPayment = paymentRepository.getById(savedPayment.getId());
-
-        assertSame(PaymentState.AUTHORIZE_ERROR, preAuthedPayment.getPaymentState());
-    }
-
-    @Transactional
-    @Test
-    public void testShouldNotRefundTransactionWithPreAuthorizeError() {
-        Payment savedPayment = paymentService.newPayment(payment);
-        paymentService.declinePreAuth(savedPayment.getId());
-        paymentService.refund(savedPayment.getId());
-
-        Payment preAuthedPayment = paymentRepository.getById(savedPayment.getId());
-
-        assertSame(PaymentState.PRE_AUTH_ERROR, preAuthedPayment.getPaymentState());
-    }
-
-
-    @Transactional
-    @Test
-    public void testDeclinePreAuth() {
-        Payment savedPayment = paymentService.newPayment(payment);
-        StateMachine<PaymentState, PaymentEvent> sm = paymentService.declinePreAuth(savedPayment.getId());
-
-        Payment preAuthedPayment = paymentRepository.getById(savedPayment.getId());
-
-        assertSame(PaymentState.PRE_AUTH_ERROR, preAuthedPayment.getPaymentState());
+        assertSame(PaymentState.REFUND_COMPLETED, savedPayment.getPaymentState());
     }
 }

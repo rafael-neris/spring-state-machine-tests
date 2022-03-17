@@ -8,13 +8,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 public interface PaymentService {
     Payment newPayment(Payment payment);
-    StateMachine<PaymentState, PaymentEvent> preAuth(Long paymentId);
-    @Transactional
-    StateMachine<PaymentState, PaymentEvent> approvePreAuth(Long paymentId);
+
     @Transactional
     StateMachine<PaymentState, PaymentEvent> authorizePayment(Long paymentId);
-    @Transactional
-    StateMachine<PaymentState, PaymentEvent> declinePreAuth(Long paymentId);
+
     @Transactional
     StateMachine<PaymentState, PaymentEvent> declineAuth(Long paymentId);
     @Transactional
