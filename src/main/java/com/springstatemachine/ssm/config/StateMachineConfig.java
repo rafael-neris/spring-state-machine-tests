@@ -59,7 +59,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<PaymentSta
                 .withJoin()
                     .source(PaymentState.REFUND)
                     .target(PaymentState.REFUND_COMPLETED)
-                .and()
+                    .and()
                 .withExternal()
                     .source(PaymentState.REFUND_COMPLETED)
                     .target(PaymentState.REFUNDED)

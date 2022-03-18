@@ -31,10 +31,14 @@ class PaymentServiceImplTest {
         Payment savedPayment = paymentService.newPayment(payment);
 
         paymentService.declineAuth(savedPayment.getId());
+        paymentService.initRefundFlow(savedPayment.getId());
+        paymentService.notify(savedPayment.getId());
         paymentService.confirmNotify(savedPayment.getId());
         paymentService.confirmRefund(savedPayment.getId());
         paymentService.completeRefund(savedPayment.getId());
-        assertSame(PaymentState.REFUND_COMPLETED, savedPayment.getPaymentState());
+        Payment payment = paymentRepository.getById(savedPayment.getId());
+
+        assertSame(PaymentState.REFUNDED, payment.getPaymentState());
 
     }
 }
