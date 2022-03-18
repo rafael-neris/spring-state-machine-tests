@@ -129,6 +129,10 @@ public class PaymentServiceImpl implements PaymentService {
         Message<PaymentEvent> msg = MessageBuilder.withPayload(event)
                 .setHeader(PAYMENT_ID_HEADER, paymentId)
                 .build();
-        System.out.println(sm.sendEvent(msg));
+        boolean statusIsAccepted = sm.sendEvent(msg);
+        System.out.println();
+        if (!statusIsAccepted) {
+            System.out.println(sm.isComplete());;
+        }
     }
 }

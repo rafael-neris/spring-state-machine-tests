@@ -21,8 +21,12 @@ class StateMachineConfigTest {
     void testNewStateMachine() {
         StateMachine<PaymentState, PaymentEvent> sm = factory.getStateMachine(UUID.randomUUID());
         sm.start();
-        sm.sendEvent(PaymentEvent.AUTH_DECLINED);
-        assertSame(PaymentState.AUTHORIZE_ERROR, sm.getState().getId());
+        boolean resultAuthDeclined = sm.sendEvent(PaymentEvent.AUTH_DECLINED);
+        assertTrue(resultAuthDeclined);
+        assertTrue(sm.sendEvent(PaymentEvent.REFUND_FLOW));
+        assertTrue(sm.sendEvent(PaymentEvent.CONFIRM));
+        assertTrue(sm.sendEvent(PaymentEvent.CONFIRM_NOTIFY));
+        assertSame(PaymentState.REFUNDED, sm.getState().getId());
         sm.stop();
     }
 }
